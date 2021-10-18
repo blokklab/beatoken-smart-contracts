@@ -1,20 +1,25 @@
+import FungibleToken from "../../contracts/FungibleToken.cdc"
 import FungibleBeatoken from "../../contracts/FungibleBeatoken.cdc"
 
 transaction(recipient: Address, amount: UFix64) {
 
     let mintingRef: &FungibleBeatoken.VaultMinter
-    let receiver: &AnyResource{FungibleBeatoken.Receiver}
+    let receiver: &AnyResource{FungibleToken.Receiver}
 
 	prepare(acct: AuthAccount) {
-        self.mintingRef = acct.borrow<&FungibleBeatoken.VaultMinter>(from: /storage/MainMinter)
+        self.mintingRef = acct
+            .borrow<&FungibleBeatoken.VaultMinter>(from: FungibleBeatoken.minterStoragePath)
             ?? panic("Could not borrow a reference to the minter")
 
-        self.receiver = getAccount(recipient).getCapability(/public/MainReceiver)!
-              .borrow<&FungibleBeatoken.Vault{FungibleBeatoken.Receiver}>()
-              ?? panic("Could not borrow a reference to the receiver")
+        self.receiver = getAccount(recipient)
+            .getCapability(FungibleBeatoken.publicReceiverPath)
+            .borrow<&FungibleBeatoken.Vault{FungibleToken.Receiver}>()
+            ?? panic("Could not borrow a reference to the receiver")
 	}
 
     execute {
-        self.mintingRef.mintTokens(amount: amount, recipient: self.receiver)
+        let vault <- self.mintingRef.mintTokens(amount: amount)
+        log(vault.balance)
+        self.receiver.deposit(from: <- vault)
     }
 }
