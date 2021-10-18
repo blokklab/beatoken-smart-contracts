@@ -134,6 +134,9 @@ describe("FungibleBeatoken", () => {
 		const smallerflowAmount = toUFix64(300);
 
 		await mintFungibleBeatoken(BeatokenAdmin, amount);
+		const BeatokenAdminBalance = await getFungibleBeatokenBalance(BeatokenAdmin);
+		expect(BeatokenAdminBalance).toBe(amount);
+
 
 		await shallPass(transferFungibleBeatoken(BeatokenAdmin, Alice, smallerflowAmount));
 
