@@ -1,5 +1,5 @@
 import { deployContractByName, executeScript, sendTransaction } from "flow-js-testing";
-import { getBeatokenAdminAddress } from "./common";
+import { getBeatokenAdminAddress, getFungibleTokenAddress, getNonFungibleTokenAddress } from "./common";
 import { deployFungibleBeatoken, setupFungibleBeatokenOnAccount } from "./ft";
 import { deployNfts, setupNftsOnAccount } from "./nfts";
 
@@ -10,11 +10,15 @@ import { deployNfts, setupNftsOnAccount } from "./nfts";
  * */
 export const deployMarketplaceBeatoken = async () => {
 	const BeatokenAdmin = await getBeatokenAdminAddress();
+	const FungibleToken = await getFungibleTokenAddress();
+	const NonFungibleToken = await getNonFungibleTokenAddress();
 
 	await deployFungibleBeatoken();
 	await deployNfts();
 
 	const addressMap = {
+		FungibleToken: FungibleToken,
+		NonFungibleToken: NonFungibleToken,
 		NonFungibleBeatoken: BeatokenAdmin,
 		FungibleBeatoken: BeatokenAdmin
 	};

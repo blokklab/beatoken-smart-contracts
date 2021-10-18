@@ -1,11 +1,14 @@
+import NonFungibleToken from "../../contracts/NonFungibleToken.cdc"
 import NonFungibleBeatoken from "../../contracts/NonFungibleBeatoken.cdc"
 
 transaction {
     prepare(acct: AuthAccount) {
-        if acct.borrow<&NonFungibleBeatoken.Collection>(from: /storage/NFTCollection) == nil {
-            acct.save<@NonFungibleBeatoken.Collection>(<-NonFungibleBeatoken.createEmptyCollection(), to: /storage/NFTCollection)
+        let storageCollection =  NonFungibleBeatoken.storageCollection
 
-            acct.link<&{NonFungibleBeatoken.NFTReceiver}>(/public/NFTReceiver, target: /storage/NFTCollection)
+        if acct.borrow<&NonFungibleBeatoken.Collection>(from: storageCollection) == nil {
+            acct.save<@NonFungibleBeatoken.Collection>(<-NonFungibleBeatoken.createEmptyCollection(), to: storageCollection)
+
+            acct.link<&NonFungibleBeatoken.Collection{NonFungibleToken.CollectionPublic}>(NonFungibleBeatoken.publicNFTReceiver, target: storageCollection)
         }
     }
 }

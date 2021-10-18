@@ -1,15 +1,15 @@
+import NonFungibleToken from "../../contracts/NonFungibleToken.cdc"
 import NonFungibleBeatoken from "../../contracts/NonFungibleBeatoken.cdc"
 
 transaction(recipient: Address, withdrawID: UInt64) {
     prepare(signer: AuthAccount) {
 
-        let recipient = getAccount(recipient)
-
-        let collectionRef = signer.borrow<&NonFungibleBeatoken.Collection>(from: /storage/NFTCollection)
+        let collectionRef = signer.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection)
             ?? panic("Could not borrow a reference to the owner's collection")
 
-        let depositRef = recipient.getCapability(/public/NFTReceiver).borrow<&{NonFungibleBeatoken.NFTReceiver}>()!
-
+        let depositRef = getAccount(recipient).getCapability(NonFungibleBeatoken.publicNFTReceiver)!
+            .borrow<&{NonFungibleToken.CollectionPublic}>()!
+            
         let nft <- collectionRef.withdraw(withdrawID: withdrawID)
 
         depositRef.deposit(token: <-nft)

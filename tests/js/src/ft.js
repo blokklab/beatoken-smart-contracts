@@ -1,5 +1,6 @@
 import { deployContractByName, executeScript, mintFlow, sendTransaction } from "flow-js-testing";
-import { getBeatokenAdminAddress } from "./common";
+
+import { getBeatokenAdminAddress, getFungibleTokenAddress } from "./common";
 
 /*
  * Deploys FungibleBeatoken contract to BeatokenAdmin.
@@ -7,10 +8,15 @@ import { getBeatokenAdminAddress } from "./common";
  * @returns {Promise<*>}
  * */
 export const deployFungibleBeatoken = async () => {
+
+	const FungibleToken = await getFungibleTokenAddress();
+	await mintFlow(FungibleToken, "10.0");
+	
 	const BeatokenAdmin = await getBeatokenAdminAddress();
 	await mintFlow(BeatokenAdmin, "10.0");
 
-	return deployContractByName({ to: BeatokenAdmin, name: "FungibleBeatoken" });
+	await deployContractByName({ to: FungibleToken, name: "FungibleToken"});
+	await deployContractByName({ to: BeatokenAdmin, name: "FungibleBeatoken" });
 };
 
 /*

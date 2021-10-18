@@ -59,7 +59,7 @@ pub contract FungibleBeatoken: FungibleToken {
         self.vaultStoragePath = /storage/FungibleBeatokenMainVault
 
         let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/FungibleBeatokenMainVault)
+        self.account.save(<-vault, to: self.vaultStoragePath)
         self.account.link<&Vault{FungibleToken.Receiver,FungibleToken.Balance}>(self.publicReceiverPath, target: self.vaultStoragePath)
 
         let minter <-create VaultMinter()

@@ -1,6 +1,6 @@
 import { deployContractByName, executeScript, mintFlow, sendTransaction } from "flow-js-testing";
 
-import { getBeatokenAdminAddress } from "./common";
+import { getBeatokenAdminAddress, getNonFungibleTokenAddress } from "./common";
 
 
 /*
@@ -9,12 +9,15 @@ import { getBeatokenAdminAddress } from "./common";
  * @returns {Promise<*>}
  * */
 export const deployNfts = async () => {
-	const BeatokenAdmin = await getBeatokenAdminAddress();
-	await mintFlow(BeatokenAdmin, "10.0");
 
-	await deployContractByName({ to: BeatokenAdmin, name: "NonFungibleBeatoken" });
+    const NonFungibleToken = await getNonFungibleTokenAddress();
+    await mintFlow(NonFungibleToken, "10.0");
 
-	const addressMap = { NonFungibleBeatoken: BeatokenAdmin };
+    const BeatokenAdmin = await getBeatokenAdminAddress();
+    await mintFlow(BeatokenAdmin, "10.0");
+
+    await deployContractByName({ to: NonFungibleToken, name: "NonFungibleToken"});
+    await deployContractByName({ to: BeatokenAdmin, name: "NonFungibleBeatoken", addressMap: { NonFungibleToken }});
 };
 
 /*

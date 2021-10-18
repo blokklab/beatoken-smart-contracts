@@ -6,3 +6,5 @@ const UFIX64_PRECISION = 8;
 export const toUFix64 = (value) => value.toFixed(UFIX64_PRECISION);
 
 export const getBeatokenAdminAddress = async () => getAccountAddress("BeatokenAdmin");
+export const getFungibleTokenAddress = async () => getAccountAddress("FungibleToken");
+export const getNonFungibleTokenAddress = async () => getAccountAddress("NonFungibleToken");

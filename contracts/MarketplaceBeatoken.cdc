@@ -1,5 +1,7 @@
-import FungibleBeatoken from 0x68752a557df26bd3
-import NonFungibleBeatoken from 0x8738a111a08d1525
+import FungibleToken from "./FungibleBeatoken.cdc"
+import FungibleBeatoken from "./FungibleBeatoken.cdc"
+import NonFungibleToken from "./NonFungibleToken.cdc"
+import NonFungibleBeatoken from "./NonFungibleBeatoken.cdc"
 
 pub contract MarketplaceBeatoken {
     pub event ForSale(id: UInt64, price: UFix64)
@@ -7,27 +9,26 @@ pub contract MarketplaceBeatoken {
     pub event TokenPurchased(id: UInt64, price: UFix64)
     pub event SaleWithdrawn(id: UInt64)
 
-
     pub resource interface SalePublic {
-        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{NonFungibleBeatoken.NFTReceiver}, buyTokens: @FungibleBeatoken.Vault)
+        pub fun purchase(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic}, buyTokens: @FungibleToken.Vault)
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun borrowNFT(id: UInt64): &NonFungibleBeatoken.NFT
         pub fun getIDs(): [UInt64]
-        pub fun cancelSale(tokenID: UInt64, recipient: &AnyResource{NonFungibleBeatoken.NFTReceiver})
+        pub fun cancelSale(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic})
     }
 
     pub resource SaleCollection: SalePublic {
 
-        access(self) let ownerCollection: Capability<&AnyResource{NonFungibleBeatoken.NFTReceiver}>
+        access(self) let ownerCollection: Capability<&{NonFungibleToken.CollectionPublic}>
 
-        access(self) let ownerVault: Capability<&AnyResource{FungibleBeatoken.Receiver}>
+        access(self) let ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>
 
         pub var forSale: @{UInt64: NonFungibleBeatoken.NFT}
 
         pub var prices: {UInt64: UFix64}
 
-        init (collection: Capability<&AnyResource{NonFungibleBeatoken.NFTReceiver}>,
-              vault: Capability<&AnyResource{FungibleBeatoken.Receiver}>) {
+        init (collection: Capability<&{NonFungibleToken.CollectionPublic}>,
+              vault: Capability<&AnyResource{FungibleToken.Receiver}>) {
 
             pre {
                 collection.check():
@@ -67,7 +68,7 @@ pub contract MarketplaceBeatoken {
             emit PriceChanged(id: tokenID, newPrice: newPrice)
         }
 
-        pub fun purchase(tokenID: UInt64, recipient: &AnyResource{NonFungibleBeatoken.NFTReceiver}, buyTokens: @FungibleBeatoken.Vault) {
+        pub fun purchase(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic}, buyTokens: @FungibleToken.Vault) {
             pre {
                 self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
                     "No token matching this ID for sale!"
@@ -101,7 +102,7 @@ pub contract MarketplaceBeatoken {
             return &self.forSale[id] as &NonFungibleBeatoken.NFT
         }
 
-        pub fun cancelSale(tokenID: UInt64, recipient: &AnyResource{NonFungibleBeatoken.NFTReceiver}) {
+        pub fun cancelSale(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic}) {
             pre {
                 self.prices[tokenID] != nil: "Token with the specified ID is not already for sale"
             }
@@ -117,8 +118,8 @@ pub contract MarketplaceBeatoken {
         }
     }
 
-    pub fun createSaleCollection(ownerCollection: Capability<&AnyResource{NonFungibleBeatoken.NFTReceiver}>,
-                                 ownerVault: Capability<&AnyResource{FungibleBeatoken.Receiver}>): @SaleCollection {
+    pub fun createSaleCollection(ownerCollection: Capability<&{NonFungibleToken.CollectionPublic}>,
+                                 ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>): @SaleCollection {
 
         return <- create SaleCollection(collection: ownerCollection, vault: ownerVault)
     }

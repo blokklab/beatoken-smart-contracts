@@ -31,7 +31,7 @@ describe("FungibleBeatoken", () => {
 
 	it("shall have initialized supply field correctly", async () => {
 		// Deploy contract
-		await shallPass(deployFungibleBeatoken());
+		await deployFungibleBeatoken();
 
 		await shallResolve(async () => {
 			const supply = await getFungibleBeatokenSupply();

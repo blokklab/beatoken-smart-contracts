@@ -1,13 +1,12 @@
-// import NonFungibleToken from "./NonFungibleToken.cdc"
-import NonFungibleToken from 0xf8d6e0586b0a20c7
+import NonFungibleToken from "./NonFungibleToken.cdc"
 
 pub contract NonFungibleBeatoken: NonFungibleToken {
 
     pub var totalSupply: UInt64
 
-    pub let publicBeatokenNFTReceiver: PublicPath
-    pub let storageNonFungibleBeatokenCollection: StoragePath
-    pub let storageBeatokenNFTMinter: StoragePath
+    pub let storageCollection: StoragePath
+    pub let publicNFTReceiver: PublicPath
+    pub let storageNFTMinter: StoragePath
 
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
@@ -23,8 +22,8 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
         init(name: String, 
             ipfs_hash:String, 
             token_uri:String,
-            description:String) 
-{
+            description:String) {
+
             self.name=name
             self.ipfs_hash=ipfs_hash
             self.token_uri=token_uri
@@ -81,7 +80,7 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
 
     pub resource NFTMinter {
 
-        pub fun mintNFT(recipient: &{NonFungibleToken.Receiver}, name: String, ipfs_hash: String, token_uri: String, description: String) {
+        pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, name: String, ipfs_hash: String, token_uri: String, description: String) {
             let id = NonFungibleBeatoken.totalSupply
             let newNFT <- create NFT(
                 initID: id,
@@ -102,18 +101,18 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
     }
 
     init() {
-        self.totalSupply = 0;
+        self.totalSupply = 1;
 
         // Define paths
-        self.publicBeatokenNFTReceiver = /public/NFTReceiver
-        self.storageNonFungibleBeatokenCollection = /storage/NFTCollection
-        self.storageBeatokenNFTMinter = /storage/NFTMinter
+        self.storageCollection = /storage/NFTCollection
+        self.publicNFTReceiver = /public/NFTReceiver
+        self.storageNFTMinter = /storage/NFTMinter
 
         // Create, store and explose capability for collection
         let collection <- self.createEmptyCollection()
-        self.account.save(<- collection, to: self.storageNonFungibleBeatokenCollection )
-        self.account.link<&{NonFungibleToken.Receiver}>(self.publicBeatokenNFTReceiver, target: self.storageNonFungibleBeatokenCollection)
+        self.account.save(<- collection, to: self.storageCollection )
+        self.account.link<&{NonFungibleToken.Receiver}>(self.publicNFTReceiver, target: self.storageCollection)
         
-        self.account.save(<-create NFTMinter(), to: self.storageBeatokenNFTMinter )
+        self.account.save(<-create NFTMinter(), to: self.storageNFTMinter )
     }
 }
