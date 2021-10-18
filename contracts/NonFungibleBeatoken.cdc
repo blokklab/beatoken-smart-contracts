@@ -1,5 +1,17 @@
-pub contract NonFungibleBeatoken {
+// import NonFungibleToken from "./NonFungibleToken.cdc"
+import NonFungibleToken from 0xf8d6e0586b0a20c7
 
+pub contract NonFungibleBeatoken: NonFungibleToken {
+
+    pub var totalSupply: UInt64
+
+    pub let publicBeatokenNFTReceiver: PublicPath
+    pub let storageNonFungibleBeatokenCollection: StoragePath
+    pub let storageBeatokenNFTMinter: StoragePath
+
+    pub event ContractInitialized()
+    pub event Withdraw(id: UInt64, from: Address?)
+    pub event Deposit(id: UInt64, to: Address?)
     pub event CreatedNft(id: UInt64)
 
     pub struct Metadata {
@@ -8,62 +20,54 @@ pub contract NonFungibleBeatoken {
         pub let token_uri: String
         pub let description: String
 
-        init(name: String,
-            ipfs_hash:String,
+        init(name: String, 
+            ipfs_hash:String, 
             token_uri:String,
-            description:String) {
-                self.name=name
-                self.ipfs_hash=ipfs_hash
-                self.token_uri=token_uri
-                self.description=description
+            description:String) 
+{
+            self.name=name
+            self.ipfs_hash=ipfs_hash
+            self.token_uri=token_uri
+            self.description=description
         }
     }
 
-    pub resource NFT {
+    pub resource NFT: NonFungibleToken.INFT {
+
         pub let id: UInt64
         pub let metadata: Metadata
 
         init(initID: UInt64, metadata: Metadata) {
-              self.id = initID
-              self.metadata = metadata
+            self.id = initID
+            self.metadata = metadata
         }
     }
 
-    pub resource interface NFTReceiver {
-        pub fun deposit(token: @NFT)
-        pub fun getIDs(): [UInt64]
-        pub fun borrowNFT(id: UInt64): &NonFungibleBeatoken.NFT
-        pub fun idExists(id: UInt64): Bool
-    }
-
-    pub resource Collection: NFTReceiver {
-        pub var ownedNFTs: @{UInt64: NFT}
+    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+        pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
         init () {
             self.ownedNFTs <- {}
         }
 
-        pub fun withdraw(withdrawID: UInt64): @NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID)!
+        pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
+            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
 
             return <-token
         }
 
-        pub fun deposit(token: @NFT) {
+        pub fun deposit(token: @NonFungibleToken.NFT) {
+            let token <- token as! @NFT
             let oldToken <- self.ownedNFTs[token.id] <- token
             destroy oldToken
-        }
-
-        pub fun idExists(id: UInt64): Bool {
-            return self.ownedNFTs[id] != nil
         }
 
         pub fun getIDs(): [UInt64] {
             return self.ownedNFTs.keys
         }
 
-        pub fun borrowNFT(id: UInt64): &NonFungibleBeatoken.NFT {
-            return &self.ownedNFTs[id] as &NonFungibleBeatoken.NFT
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
+            return &self.ownedNFTs[id] as &NonFungibleToken.NFT
         }
 
         destroy() {
@@ -76,15 +80,10 @@ pub contract NonFungibleBeatoken {
     }
 
     pub resource NFTMinter {
-        pub var idCount: UInt64
 
-        init() {
-            self.idCount = 1
-        }
-
-        pub fun mintNFT(recipient: &AnyResource{NFTReceiver}, name: String, ipfs_hash: String, token_uri: String, description: String) {
-            let id = self.idCount
-            var newNFT <- create NFT(
+        pub fun mintNFT(recipient: &{NonFungibleToken.Receiver}, name: String, ipfs_hash: String, token_uri: String, description: String) {
+            let id = NonFungibleBeatoken.totalSupply
+            let newNFT <- create NFT(
                 initID: id,
                 metadata: Metadata(
                   name: name,
@@ -96,15 +95,25 @@ pub contract NonFungibleBeatoken {
 
             recipient.deposit(token: <-newNFT)
 
-            self.idCount = self.idCount + 1 as UInt64
+            NonFungibleBeatoken.totalSupply = id + (1 as UInt64)
 
             emit CreatedNft(id: id)
         }
     }
 
     init() {
-        self.account.save(<-self.createEmptyCollection(), to: /storage/NFTCollection)
-        self.account.link<&{NFTReceiver}>(/public/NFTReceiver, target: /storage/NFTCollection)
-        self.account.save(<-create NFTMinter(), to: /storage/NFTMinter)
+        self.totalSupply = 0;
+
+        // Define paths
+        self.publicBeatokenNFTReceiver = /public/NFTReceiver
+        self.storageNonFungibleBeatokenCollection = /storage/NFTCollection
+        self.storageBeatokenNFTMinter = /storage/NFTMinter
+
+        // Create, store and explose capability for collection
+        let collection <- self.createEmptyCollection()
+        self.account.save(<- collection, to: self.storageNonFungibleBeatokenCollection )
+        self.account.link<&{NonFungibleToken.Receiver}>(self.publicBeatokenNFTReceiver, target: self.storageNonFungibleBeatokenCollection)
+        
+        self.account.save(<-create NFTMinter(), to: self.storageBeatokenNFTMinter )
     }
 }

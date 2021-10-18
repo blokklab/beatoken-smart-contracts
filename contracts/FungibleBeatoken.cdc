@@ -1,52 +1,45 @@
-pub contract FungibleBeatoken {
+import FungibleToken from "./FungibleToken.cdc"
+
+pub contract FungibleBeatoken: FungibleToken {
+
+    // Total Supply
     pub var totalSupply: UFix64
 
-    pub resource interface Provider {
-        pub fun withdraw(amount: UFix64): @Vault {
-            post {
-                result.balance == UFix64(amount):
-                    "Withdrawal amount must be the same as the balance of the withdrawn Vault"
-            }
-        }
-    }
+    // Events
+    pub event TokensInitialized(initialSupply: UFix64)
+    pub event TokensWithdrawn(amount: UFix64, from: Address?)
+    pub event TokensDeposited(amount: UFix64, to: Address?)
 
-    pub resource interface Receiver {
-        pub fun deposit(from: @Vault)
-    }
+    // Paths
+    pub let minterPath: PrivatePath
+    pub let minterStoragePath: StoragePath
 
-    pub resource interface Balance {
-        pub var balance: UFix64
+    pub let publicReceiverPath: PublicPath
+    pub let vaultStoragePath: StoragePath
 
-        init(balance: UFix64) {
-            post {
-                self.balance == balance:
-                    "Balance must be initialized to the initial balance"
-            }
-        }
-    }
-
-    pub resource Vault: Provider, Receiver, Balance {
+    pub resource Vault: FungibleToken.Provider, FungibleToken.Receiver, FungibleToken.Balance {
         pub var balance: UFix64
 
         init(balance: UFix64) {
             self.balance = balance
         }
 
-        pub fun withdraw(amount: UFix64): @Vault {
+        pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             self.balance = self.balance - amount
             return <-create Vault(balance: amount)
         }
 
-        pub fun deposit(from: @Vault) {
-            self.balance = self.balance + from.balance
-            destroy from
+        pub fun deposit(from: @FungibleToken.Vault) {
+            let vault <- from as! @FungibleBeatoken.Vault
+            self.balance = self.balance + vault.balance
+            destroy vault
         }
     }
 
     pub resource VaultMinter {
-        pub fun mintTokens(amount: UFix64, recipient: &AnyResource{Receiver}) {
+        pub fun mintTokens(amount: UFix64): @FungibleBeatoken.Vault {
             FungibleBeatoken.totalSupply = FungibleBeatoken.totalSupply + amount
-            recipient.deposit(from: <-create Vault(balance: amount))
+            return <-create Vault(balance: amount)
         }
     }
 
@@ -56,14 +49,23 @@ pub contract FungibleBeatoken {
 
     init() {
         self.totalSupply = 0.0
+        
+        // minter paths
+        self.minterPath = /private/FungibleBeatokenMainMinter
+        self.minterStoragePath = /storage/FungibleBeatokenMainMinter
+
+        // Vault paths
+        self.publicReceiverPath = /public/FungibleBeatokenReceiver
+        self.vaultStoragePath = /storage/FungibleBeatokenMainVault
 
         let vault <- create Vault(balance: self.totalSupply)
-        self.account.save(<-vault, to: /storage/MainVault)
+        self.account.save(<-vault, to: /storage/FungibleBeatokenMainVault)
+        self.account.link<&Vault{FungibleToken.Receiver,FungibleToken.Balance}>(self.publicReceiverPath, target: self.vaultStoragePath)
 
-        self.account.save(<-create VaultMinter(), to: /storage/MainMinter)
+        let minter <-create VaultMinter()
+        self.account.save(<- minter, to: self.minterStoragePath)
+        self.account.link<&VaultMinter>(self.minterPath, target: self.minterStoragePath)
 
-        self.account.link<&VaultMinter>(/private/Minter, target: /storage/MainMinter)
-
-        self.account.link<&Vault{Receiver, Balance}>(/public/MainReceiver, target: /storage/MainVault)
     }
 }
+ 
