@@ -6,8 +6,8 @@ transaction {
     prepare(acct: AuthAccount) {
         if acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: /storage/NFTSale) == nil {
             let sale <- MarketplaceBeatoken.createSaleCollection(
-                ownerCollection: acct.getCapability<&{NonFungibleBeatoken.NFTReceiver}>(/public/NFTReceiver),
-                ownerVault: acct.getCapability<&{FungibleBeatoken.Receiver}>(/public/MainReceiver)
+                ownerCollection: acct.getCapability<&NonFungibleBeatoken.Collection>(NonFungibleBeatoken.publicNFTReceiver),
+                ownerVault: acct.getCapability<&FungibleBeatoken.Vault>(FungibleBeatoken.publicReceiverPath)
             )
 
             acct.save<@MarketplaceBeatoken.SaleCollection>(<-sale, to: /storage/NFTSale)

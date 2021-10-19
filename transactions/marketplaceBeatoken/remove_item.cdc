@@ -3,13 +3,13 @@ import MarketplaceBeatoken from "../../contracts/MarketplaceBeatoken.cdc"
 
 transaction(nftId: UInt64) {
     let market: &MarketplaceBeatoken.SaleCollection
-    let collectionRef: &AnyResource{NonFungibleBeatoken.NFTReceiver}
-
+    let collectionRef: &NonFungibleBeatoken.Collection
+    
     prepare(acct: AuthAccount) {
         self.market = acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: /storage/NFTSale)
         ?? panic("Could not borrow from sale in storage")
 
-        self.collectionRef = acct.borrow<&AnyResource{NonFungibleBeatoken.NFTReceiver}>(from: /storage/NFTCollection)!
+        self.collectionRef = acct.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection)!
     }
 
     execute {

@@ -4,22 +4,24 @@ import MarketplaceBeatoken from "../../contracts/MarketplaceBeatoken.cdc"
 
 transaction(ownerNft: Address, buyItemId: UInt64, buyItemPrice: UFix64) {
     prepare(acct: AuthAccount) {
-        if acct.borrow<&AnyResource{NonFungibleBeatoken.NFTReceiver}>(from: /storage/NFTCollection) == nil {
-            acct.save<@NonFungibleBeatoken.Collection>(<-NonFungibleBeatoken.createEmptyCollection(), to: /storage/NFTCollection)
-            acct.link<&{NonFungibleBeatoken.NFTReceiver}>(/public/NFTReceiver, target: /storage/NFTCollection)
+        if acct.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection) == nil {
+            acct.save<@NonFungibleBeatoken.Collection>(<-NonFungibleBeatoken.createEmptyCollection(), to: NonFungibleBeatoken.storageCollection)
+            acct.link<&NonFungibleBeatoken.Collection>(NonFungibleBeatoken.publicNFTReceiver, target: NonFungibleBeatoken.storageCollection)
         }
 
-        let collectionRef = acct.borrow<&AnyResource{NonFungibleBeatoken.NFTReceiver}>(from: /storage/NFTCollection)
-            ?? panic("No nft storage")
+        let collectionRef = acct.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection)
+            ?? panic("Could not borrow owner's nft collection reference")
 
-        let vaultRef = acct.borrow<&FungibleBeatoken.Vault>(from: /storage/MainVault)
+        let vaultRef = acct.borrow<&FungibleBeatoken.Vault>(from: FungibleBeatoken.vaultStoragePath)
             ?? panic("Could not borrow owner's vault reference")
 
         let saleRef = getAccount(ownerNft).getCapability<&AnyResource{MarketplaceBeatoken.SalePublic}>(/public/NFTSale)
             .borrow()
             ?? panic("Could not borrow seller's sale reference")
 
-        let temporaryVault <- vaultRef.withdraw(amount: buyItemPrice)
+        let temporaryVault <- vaultRef.withdraw(amount: buyItemPrice) as! @FungibleBeatoken.Vault
+
         saleRef.purchase(tokenID: buyItemId, recipient: collectionRef, buyTokens: <-temporaryVault)
     }
 }
+ 

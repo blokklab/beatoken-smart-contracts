@@ -1,4 +1,3 @@
-import FungibleToken from "./FungibleBeatoken.cdc"
 import FungibleBeatoken from "./FungibleBeatoken.cdc"
 import NonFungibleToken from "./NonFungibleToken.cdc"
 import NonFungibleBeatoken from "./NonFungibleBeatoken.cdc"
@@ -10,33 +9,25 @@ pub contract MarketplaceBeatoken {
     pub event SaleWithdrawn(id: UInt64)
 
     pub resource interface SalePublic {
-        pub fun purchase(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic}, buyTokens: @FungibleToken.Vault)
+        pub fun purchase(tokenID: UInt64, recipient: &NonFungibleBeatoken.Collection, buyTokens: @FungibleBeatoken.Vault)
         pub fun idPrice(tokenID: UInt64): UFix64?
-        pub fun borrowNFT(id: UInt64): &NonFungibleBeatoken.NFT
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
         pub fun getIDs(): [UInt64]
-        pub fun cancelSale(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic})
+        pub fun cancelSale(tokenID: UInt64, recipient: &NonFungibleBeatoken.Collection)
     }
 
     pub resource SaleCollection: SalePublic {
 
-        access(self) let ownerCollection: Capability<&{NonFungibleToken.CollectionPublic}>
+        access(self) let ownerCollection: Capability<&NonFungibleBeatoken.Collection>
 
-        access(self) let ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>
+        access(self) let ownerVault: Capability<&FungibleBeatoken.Vault>
 
-        pub var forSale: @{UInt64: NonFungibleBeatoken.NFT}
+        pub var forSale: @{UInt64: NonFungibleToken.NFT}
 
         pub var prices: {UInt64: UFix64}
 
-        init (collection: Capability<&{NonFungibleToken.CollectionPublic}>,
-              vault: Capability<&AnyResource{FungibleToken.Receiver}>) {
-
-            pre {
-                collection.check():
-                    "Owner's Moment Collection Capability is invalid!"
-
-                vault.check():
-                    "Owner's Receiver Capability is invalid!"
-            }
+        init (collection: Capability<&NonFungibleBeatoken.Collection>,
+              vault: Capability<&FungibleBeatoken.Vault>) {
 
             self.forSale <- {}
             self.prices = {}
@@ -45,13 +36,13 @@ pub contract MarketplaceBeatoken {
             self.ownerVault = vault
         }
 
-        pub fun withdraw(tokenID: UInt64): @NonFungibleBeatoken.NFT {
+        pub fun withdraw(tokenID: UInt64): @NonFungibleToken.NFT {
             self.prices.remove(key: tokenID)
             let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
             return <-token
         }
 
-        pub fun listForSale(token: @NonFungibleBeatoken.NFT, price: UFix64) {
+        pub fun listForSale(token: @NonFungibleToken.NFT, price: UFix64) {
             let id = token.id
 
             self.prices[id] = price
@@ -68,7 +59,7 @@ pub contract MarketplaceBeatoken {
             emit PriceChanged(id: tokenID, newPrice: newPrice)
         }
 
-        pub fun purchase(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic}, buyTokens: @FungibleToken.Vault) {
+        pub fun purchase(tokenID: UInt64, recipient: &NonFungibleBeatoken.Collection, buyTokens: @FungibleBeatoken.Vault) {
             pre {
                 self.forSale[tokenID] != nil && self.prices[tokenID] != nil:
                     "No token matching this ID for sale!"
@@ -82,7 +73,7 @@ pub contract MarketplaceBeatoken {
 
             let vaultRef = self.ownerVault.borrow()
                 ?? panic("Could not borrow reference to owner token vault")
-
+                
             vaultRef.deposit(from: <-buyTokens)
 
             recipient.deposit(token: <-self.withdraw(tokenID: tokenID))
@@ -98,11 +89,11 @@ pub contract MarketplaceBeatoken {
             return self.forSale.keys
         }
 
-        pub fun borrowNFT(id: UInt64): &NonFungibleBeatoken.NFT {
-            return &self.forSale[id] as &NonFungibleBeatoken.NFT
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
+            return &self.forSale[id] as &NonFungibleToken.NFT
         }
 
-        pub fun cancelSale(tokenID: UInt64, recipient: &{NonFungibleToken.CollectionPublic}) {
+        pub fun cancelSale(tokenID: UInt64, recipient: &NonFungibleBeatoken.Collection) {
             pre {
                 self.prices[tokenID] != nil: "Token with the specified ID is not already for sale"
             }
@@ -118,8 +109,10 @@ pub contract MarketplaceBeatoken {
         }
     }
 
-    pub fun createSaleCollection(ownerCollection: Capability<&{NonFungibleToken.CollectionPublic}>,
-                                 ownerVault: Capability<&AnyResource{FungibleToken.Receiver}>): @SaleCollection {
+    pub fun createSaleCollection(
+                ownerCollection: Capability<&NonFungibleBeatoken.Collection>,
+                ownerVault: Capability<&FungibleBeatoken.Vault>
+            ): @SaleCollection {
 
         return <- create SaleCollection(collection: ownerCollection, vault: ownerVault)
     }
