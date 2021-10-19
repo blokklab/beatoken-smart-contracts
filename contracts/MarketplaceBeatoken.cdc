@@ -29,6 +29,14 @@ pub contract MarketplaceBeatoken {
         init (collection: Capability<&NonFungibleBeatoken.Collection>,
               vault: Capability<&FungibleBeatoken.Vault>) {
 
+            pre {
+                collection.check():
+                    "Owner's Moment Collection Capability is invalid!"
+
+                vault.check():
+                    "Owner's Receiver Capability is invalid!"
+            }
+
             self.forSale <- {}
             self.prices = {}
 

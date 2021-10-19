@@ -5,9 +5,16 @@ import MarketplaceBeatoken from "../../contracts/MarketplaceBeatoken.cdc"
 transaction {
     prepare(acct: AuthAccount) {
         if acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: /storage/NFTSale) == nil {
+            
+            acct.link<&FungibleBeatoken.Vault>(/private/beatokenVault, target: FungibleBeatoken.vaultStoragePath)
+            let ownerVault = acct.getCapability<&FungibleBeatoken.Vault>(/private/beatokenVault)
+
+            acct.link<&NonFungibleBeatoken.Collection>(/private/beatokenNFTCollection, target: NonFungibleBeatoken.storageCollection)
+            let ownerCollection = acct.getCapability<&NonFungibleBeatoken.Collection>(/private/beatokenNFTCollection)
+
             let sale <- MarketplaceBeatoken.createSaleCollection(
-                ownerCollection: acct.getCapability<&NonFungibleBeatoken.Collection>(NonFungibleBeatoken.publicNFTReceiver),
-                ownerVault: acct.getCapability<&FungibleBeatoken.Vault>(FungibleBeatoken.publicReceiverPath)
+                ownerCollection: ownerCollection,
+                ownerVault: ownerVault
             )
 
             acct.save<@MarketplaceBeatoken.SaleCollection>(<-sale, to: /storage/NFTSale)
