@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import FungibleToken from "../../contracts/FungibleToken.cdc"
 import FungibleBeatoken from "../../contracts/FungibleBeatoken.cdc"
 

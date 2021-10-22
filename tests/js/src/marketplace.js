@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import { deployContractByName, executeScript, sendTransaction } from "flow-js-testing";
 import { getBeatokenAdminAddress, getFungibleTokenAddress, getNonFungibleTokenAddress } from "./common";
 import { deployFungibleBeatoken, setupFungibleBeatokenOnAccount } from "./ft";

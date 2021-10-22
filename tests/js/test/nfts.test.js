@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 import path from "path";
 
 import { emulator, init, getAccountAddress, shallPass, shallResolve, shallRevert } from "flow-js-testing";
