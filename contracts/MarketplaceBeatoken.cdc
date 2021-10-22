@@ -3,6 +3,10 @@ import NonFungibleToken from "./NonFungibleToken.cdc"
 import NonFungibleBeatoken from "./NonFungibleBeatoken.cdc"
 
 pub contract MarketplaceBeatoken {
+
+    pub let publicSale: PublicPath
+    pub let storageSale: StoragePath
+
     pub event ForSale(id: UInt64, price: UFix64)
     pub event PriceChanged(id: UInt64, newPrice: UFix64)
     pub event TokenPurchased(id: UInt64, price: UFix64)
@@ -13,7 +17,6 @@ pub contract MarketplaceBeatoken {
         pub fun idPrice(tokenID: UInt64): UFix64?
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
         pub fun getIDs(): [UInt64]
-        pub fun cancelSale(tokenID: UInt64, recipient: &NonFungibleBeatoken.Collection)
     }
 
     pub resource SaleCollection: SalePublic {
@@ -22,9 +25,9 @@ pub contract MarketplaceBeatoken {
 
         access(self) let ownerVault: Capability<&FungibleBeatoken.Vault>
 
-        pub var forSale: @{UInt64: NonFungibleToken.NFT}
+        access(self) let prices: {UInt64: UFix64}
 
-        pub var prices: {UInt64: UFix64}
+        pub var forSale: @{UInt64: NonFungibleToken.NFT}
 
         init (collection: Capability<&NonFungibleBeatoken.Collection>,
               vault: Capability<&FungibleBeatoken.Vault>) {
@@ -47,6 +50,7 @@ pub contract MarketplaceBeatoken {
         pub fun withdraw(tokenID: UInt64): @NonFungibleToken.NFT {
             self.prices.remove(key: tokenID)
             let token <- self.forSale.remove(key: tokenID) ?? panic("missing NFT")
+            emit SaleWithdrawn(id: tokenID)
             return <-token
         }
 
@@ -123,5 +127,10 @@ pub contract MarketplaceBeatoken {
             ): @SaleCollection {
 
         return <- create SaleCollection(collection: ownerCollection, vault: ownerVault)
+    }
+
+    init() {
+        self.publicSale = /public/NFTSale
+        self.storageSale = /storage/NFTSale
     }
 }

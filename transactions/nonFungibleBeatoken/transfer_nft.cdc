@@ -7,7 +7,7 @@ transaction(recipient: Address, withdrawID: UInt64) {
         let collectionRef = signer.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection)
             ?? panic("Could not borrow a reference to the owner's collection")
 
-        let depositRef = getAccount(recipient).getCapability(NonFungibleBeatoken.publicNFTReceiver)!
+        let depositRef = getAccount(recipient).getCapability(NonFungibleBeatoken.publicReceiver)!
             .borrow<&{NonFungibleToken.CollectionPublic}>()!
             
         let nft <- collectionRef.withdraw(withdrawID: withdrawID)

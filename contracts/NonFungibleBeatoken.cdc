@@ -5,8 +5,8 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
     pub var totalSupply: UInt64
 
     pub let storageCollection: StoragePath
-    pub let publicNFTReceiver: PublicPath
-    pub let storageNFTMinter: StoragePath
+    pub let publicReceiver: PublicPath
+    pub let storageMinter: StoragePath
 
     pub event ContractInitialized()
     pub event Withdraw(id: UInt64, from: Address?)
@@ -51,12 +51,13 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
 
         pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
             let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
-
+            emit Withdraw(id: withdrawID, from: self.owner?.address)
             return <-token
         }
 
         pub fun deposit(token: @NonFungibleToken.NFT) {
             let token <- token as! @NFT
+            emit Deposit(id: token.id, to: self.owner?.address)
             let oldToken <- self.ownedNFTs[token.id] <- token
             destroy oldToken
         }
@@ -101,18 +102,20 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
     }
 
     init() {
-        self.totalSupply = 1;
+        self.totalSupply = 0;
 
         // Define paths
         self.storageCollection = /storage/NFTCollection
-        self.publicNFTReceiver = /public/NFTReceiver
-        self.storageNFTMinter = /storage/NFTMinter
+        self.publicReceiver = /public/NFTReceiver
+        self.storageMinter = /storage/NFTMinter
 
         // Create, store and explose capability for collection
         let collection <- self.createEmptyCollection()
         self.account.save(<- collection, to: self.storageCollection )
-        self.account.link<&{NonFungibleToken.Receiver}>(self.publicNFTReceiver, target: self.storageCollection)
+        self.account.link<&{NonFungibleToken.Receiver}>(self.publicReceiver, target: self.storageCollection)
         
-        self.account.save(<-create NFTMinter(), to: self.storageNFTMinter )
+        self.account.save(<-create NFTMinter(), to: self.storageMinter)
+
+        emit ContractInitialized()
     }
 }

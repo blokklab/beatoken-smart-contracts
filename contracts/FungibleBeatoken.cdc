@@ -26,12 +26,14 @@ pub contract FungibleBeatoken: FungibleToken {
 
         pub fun withdraw(amount: UFix64): @FungibleToken.Vault {
             self.balance = self.balance - amount
+            emit TokensWithdrawn(amount: amount, from: self.owner?.address)
             return <-create Vault(balance: amount)
         }
 
         pub fun deposit(from: @FungibleToken.Vault) {
             let vault <- from as! @FungibleBeatoken.Vault
             self.balance = self.balance + vault.balance
+            emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             destroy vault
         }
     }
@@ -66,6 +68,7 @@ pub contract FungibleBeatoken: FungibleToken {
         self.account.save(<- minter, to: self.minterStoragePath)
         self.account.link<&VaultMinter>(self.minterPath, target: self.minterStoragePath)
 
+        emit TokensInitialized(initialSupply: self.totalSupply)
     }
 }
  

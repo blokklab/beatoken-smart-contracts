@@ -4,7 +4,7 @@ import MarketplaceBeatoken from "../../contracts/MarketplaceBeatoken.cdc"
 
 transaction {
     prepare(acct: AuthAccount) {
-        if acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: /storage/NFTSale) == nil {
+        if acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: MarketplaceBeatoken.storageSale) == nil {
             
             acct.link<&FungibleBeatoken.Vault>(/private/beatokenVault, target: FungibleBeatoken.vaultStoragePath)
             let ownerVault = acct.getCapability<&FungibleBeatoken.Vault>(/private/beatokenVault)
@@ -17,9 +17,9 @@ transaction {
                 ownerVault: ownerVault
             )
 
-            acct.save<@MarketplaceBeatoken.SaleCollection>(<-sale, to: /storage/NFTSale)
+            acct.save<@MarketplaceBeatoken.SaleCollection>(<-sale, to: MarketplaceBeatoken.storageSale)
 
-            acct.link<&MarketplaceBeatoken.SaleCollection{MarketplaceBeatoken.SalePublic}>(/public/NFTSale, target: /storage/NFTSale)
+            acct.link<&MarketplaceBeatoken.SaleCollection{MarketplaceBeatoken.SalePublic}>(MarketplaceBeatoken.publicSale, target: MarketplaceBeatoken.storageSale)
         }
     }
 }

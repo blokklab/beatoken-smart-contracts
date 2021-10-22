@@ -8,7 +8,7 @@ transaction {
         if acct.borrow<&NonFungibleBeatoken.Collection>(from: storageCollection) == nil {
             acct.save<@NonFungibleBeatoken.Collection>(<-NonFungibleBeatoken.createEmptyCollection(), to: storageCollection)
 
-            acct.link<&NonFungibleBeatoken.Collection{NonFungibleToken.CollectionPublic}>(NonFungibleBeatoken.publicNFTReceiver, target: storageCollection)
+            acct.link<&NonFungibleBeatoken.Collection{NonFungibleToken.CollectionPublic}>(NonFungibleBeatoken.publicReceiver, target: storageCollection)
         }
     }
 }

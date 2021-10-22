@@ -6,7 +6,7 @@ transaction(ownerNft: Address, buyItemId: UInt64, buyItemPrice: UFix64) {
     prepare(acct: AuthAccount) {
         if acct.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection) == nil {
             acct.save<@NonFungibleBeatoken.Collection>(<-NonFungibleBeatoken.createEmptyCollection(), to: NonFungibleBeatoken.storageCollection)
-            acct.link<&NonFungibleBeatoken.Collection>(NonFungibleBeatoken.publicNFTReceiver, target: NonFungibleBeatoken.storageCollection)
+            acct.link<&NonFungibleBeatoken.Collection>(NonFungibleBeatoken.publicReceiver, target: NonFungibleBeatoken.storageCollection)
         }
 
         let collectionRef = acct.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection)
