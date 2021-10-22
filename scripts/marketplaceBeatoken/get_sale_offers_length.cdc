@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 import MarketplaceBeatoken from "../../contracts/MarketplaceBeatoken.cdc"
 
 pub fun main(account: Address): Int {

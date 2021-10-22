@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 import FungibleBeatoken from "../../contracts/FungibleBeatoken.cdc"
 
 pub fun main(): UFix64 {

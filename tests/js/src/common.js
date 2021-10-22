@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 import { getAccountAddress } from "flow-js-testing";
 
 const UFIX64_PRECISION = 8;

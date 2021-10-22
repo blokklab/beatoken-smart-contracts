@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 import NonFungibleToken from "../../contracts/NonFungibleToken.cdc"
 import NonFungibleBeatoken from "../../contracts/NonFungibleBeatoken.cdc"
 
