@@ -43,7 +43,14 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
         }
     }
 
-    pub resource Collection: NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
+     pub resource interface BeatokenCollectionPublic {
+        pub fun deposit(token: @NonFungibleToken.NFT)
+        pub fun getIDs(): [UInt64]
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
+        pub fun borrowBeatokenNFT(id: UInt64): &NonFungibleBeatoken.NFT?
+    }
+
+    pub resource Collection: BeatokenCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
         pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
         init () {
@@ -69,6 +76,15 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
 
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
             return &self.ownedNFTs[id] as &NonFungibleToken.NFT
+        }
+
+        pub fun borrowBeatokenNFT(id: UInt64): &NonFungibleBeatoken.NFT? {
+            if self.ownedNFTs[id] != nil {
+                let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT
+                return ref as! &NonFungibleBeatoken.NFT
+            } else {
+                return nil
+            }
         }
 
         destroy() {
@@ -106,17 +122,18 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
         self.totalSupply = 0;
 
         // Define paths
-        self.storageCollection = /storage/NFTCollection
-        self.publicReceiver = /public/NFTReceiver
-        self.storageMinter = /storage/NFTMinter
+        self.storageCollection = /storage/beatokenNFTCollection
+        self.publicReceiver = /public/beatokenNFTReceiver
+        self.storageMinter = /storage/beatokenNFTMinter
 
         // Create, store and explose capability for collection
         let collection <- self.createEmptyCollection()
-        self.account.save(<- collection, to: self.storageCollection )
-        self.account.link<&{NonFungibleToken.Receiver}>(self.publicReceiver, target: self.storageCollection)
+        self.account.save(<- collection, to: self.storageCollection)
+        self.account.link<&{BeatokenCollectionPublic}>(self.publicReceiver, target: self.storageCollection)
         
         self.account.save(<-create NFTMinter(), to: self.storageMinter)
 
         emit ContractInitialized()
     }
 }
+ 

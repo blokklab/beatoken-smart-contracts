@@ -16,7 +16,7 @@ transaction(ownerNft: Address, buyItemId: UInt64, buyItemPrice: UFix64) {
         let vaultRef = acct.borrow<&FungibleBeatoken.Vault>(from: FungibleBeatoken.vaultStoragePath)
             ?? panic("Could not borrow owner's vault reference")
 
-        let saleRef = getAccount(ownerNft).getCapability<&AnyResource{MarketplaceBeatoken.SalePublic}>(/public/NFTSale)
+        let saleRef = getAccount(ownerNft).getCapability<&AnyResource{MarketplaceBeatoken.SalePublic}>(MarketplaceBeatoken.publicSale)
             .borrow()
             ?? panic("Could not borrow seller's sale reference")
 

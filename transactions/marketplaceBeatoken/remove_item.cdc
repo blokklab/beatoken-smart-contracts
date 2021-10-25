@@ -7,7 +7,7 @@ transaction(nftId: UInt64) {
     let collectionRef: &NonFungibleBeatoken.Collection
     
     prepare(acct: AuthAccount) {
-        self.market = acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: /storage/NFTSale)
+        self.market = acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: MarketplaceBeatoken.storageSale)
         ?? panic("Could not borrow from sale in storage")
 
         self.collectionRef = acct.borrow<&NonFungibleBeatoken.Collection>(from: NonFungibleBeatoken.storageCollection)!

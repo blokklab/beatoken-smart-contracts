@@ -9,7 +9,7 @@ transaction(saleItemID: UInt64, saleItemPrice: UFix64) {
 
         let token <- collectionRef.withdraw(withdrawID: saleItemID)
         
-        let sale = acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: /storage/NFTSale)
+        let sale = acct.borrow<&MarketplaceBeatoken.SaleCollection>(from: MarketplaceBeatoken.storageSale)
             ?? panic("Could not borrow from sale in storage")
 
         sale.listForSale(token: <-token, price: saleItemPrice)

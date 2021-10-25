@@ -16,7 +16,7 @@ pub contract MarketplaceBeatoken {
     pub resource interface SalePublic {
         pub fun purchase(tokenID: UInt64, recipient: &NonFungibleBeatoken.Collection, buyTokens: @FungibleBeatoken.Vault)
         pub fun idPrice(tokenID: UInt64): UFix64?
-        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
+        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT 
         pub fun getIDs(): [UInt64]
     }
 
@@ -131,7 +131,7 @@ pub contract MarketplaceBeatoken {
     }
 
     init() {
-        self.publicSale = /public/NFTSale
-        self.storageSale = /storage/NFTSale
+        self.publicSale = /public/beatokenNFTSale
+        self.storageSale = /storage/beatokenNFTSale
     }
 }

@@ -54,12 +54,12 @@ pub contract FungibleBeatoken: FungibleToken {
         self.totalSupply = 0.0
         
         // minter paths
-        self.minterPath = /private/FungibleBeatokenMainMinter
-        self.minterStoragePath = /storage/FungibleBeatokenMainMinter
+        self.minterPath = /private/beatokenMainMinter
+        self.minterStoragePath = /storage/beatokenMainMinter
 
         // Vault paths
-        self.publicReceiverPath = /public/FungibleBeatokenReceiver
-        self.vaultStoragePath = /storage/FungibleBeatokenMainVault
+        self.publicReceiverPath = /public/beatokenReceiver
+        self.vaultStoragePath = /storage/beatokenMainVault
 
         let vault <- create Vault(balance: self.totalSupply)
         self.account.save(<-vault, to: self.vaultStoragePath)
