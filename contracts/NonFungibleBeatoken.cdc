@@ -47,7 +47,12 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
         pub fun deposit(token: @NonFungibleToken.NFT)
         pub fun getIDs(): [UInt64]
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-        pub fun borrowBeatokenNFT(id: UInt64): &NonFungibleBeatoken.NFT?
+        pub fun borrowBeatokenNFT(id: UInt64): &NonFungibleBeatoken.NFT? {
+            post {
+                (result == nil) || (result?.id == id):
+                    "Cannot borrow BeatokenNFT reference: The ID of the returned reference is incorrect"
+            }
+        }
     }
 
     pub resource Collection: BeatokenCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic {
@@ -99,6 +104,9 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
     pub resource NFTMinter {
 
         pub fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, name: String, ipfs_hash: String, token_uri: String, description: String) {
+            
+            NonFungibleBeatoken.totalSupply = NonFungibleBeatoken.totalSupply + (1 as UInt64)
+            
             let id = NonFungibleBeatoken.totalSupply
             let newNFT <- create NFT(
                 initID: id,
@@ -111,8 +119,6 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
             )
 
             recipient.deposit(token: <-newNFT)
-
-            NonFungibleBeatoken.totalSupply = id + (1 as UInt64)
 
             emit CreatedNft(id: id)
         }
@@ -129,8 +135,9 @@ pub contract NonFungibleBeatoken: NonFungibleToken {
         // Create, store and explose capability for collection
         let collection <- self.createEmptyCollection()
         self.account.save(<- collection, to: self.storageCollection)
-        self.account.link<&{BeatokenCollectionPublic}>(self.publicReceiver, target: self.storageCollection)
-        
+        self.account.link<&NonFungibleBeatoken.Collection{BeatokenCollectionPublic, NonFungibleToken.CollectionPublic}>
+            (self.publicReceiver, target: self.storageCollection)
+
         self.account.save(<-create NFTMinter(), to: self.storageMinter)
 
         emit ContractInitialized()

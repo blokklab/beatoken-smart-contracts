@@ -58,7 +58,7 @@ describe("MarketplaceBeatoken", () => {
 			'Test description for NFT'
 		));
 
-		const itemID = 0;
+		const itemID = 1;
 
 		await shallPass(sellItem(Alice, itemID, toUFix64(1.11)));
 	});
@@ -78,7 +78,7 @@ describe("MarketplaceBeatoken", () => {
 			'Test description for NFT'
 		));
 
-		const itemId = 0;
+		const itemId = 1;
 
 		// Setup buyer account
 		const Bob = await getAccountAddress("Bob");
@@ -120,7 +120,7 @@ describe("MarketplaceBeatoken", () => {
 			'Test description for NFT'
 		));
 
-		const itemId = 0;
+		const itemId = 1;
 
 		await getNftItem(Alice, itemId);
 

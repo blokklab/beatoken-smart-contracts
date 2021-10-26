@@ -90,6 +90,6 @@ describe("NonFungibleBeatoken", () => {
 		));
 
 		// Transfer transaction shall pass
-		await shallPass(transferNft(Alice, Bob, 0));
+		await shallPass(transferNft(Alice, Bob, 1));
 	});
 });
